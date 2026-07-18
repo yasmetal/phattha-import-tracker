@@ -28,6 +28,22 @@ const stepEls = {
 
 let allRows = [];
 
+/* ---------------- Shop dropdown ---------------- */
+
+const shopSelect = document.getElementById("shopName");
+
+function populateShopSelect() {
+  if (!shopSelect || typeof SHOP_LIST === "undefined") return;
+  SHOP_LIST.forEach((name) => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    shopSelect.appendChild(opt);
+  });
+}
+
+populateShopSelect();
+
 function isConfigured() {
   return (
     typeof APPS_SCRIPT_URL === "string" &&
@@ -115,7 +131,7 @@ submitModal.addEventListener("click", (e) => {
 
 function renderRows(rows) {
   if (!rows || rows.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="4" class="empty-row">ยังไม่มีข้อมูล</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="5" class="empty-row">ยังไม่มีข้อมูล</td></tr>';
     return;
   }
   const sorted = rows.slice().reverse(); // ล่าสุดขึ้นก่อน
@@ -123,11 +139,13 @@ function renderRows(rows) {
     .map((row) => {
       const timestamp = row.timestamp || row.Timestamp || "";
       const importId = row.importId || row["ID เลขนำเข้า"] || "";
+      const shopName = row.shopName || row["ร้านค้า"] || "-";
       const quantity = row.quantity || row["จำนวน"] || "";
       const employeeName = row.employeeName || row["ชื่อพนักงานนำเข้า"] || "";
       return `<tr>
         <td>${formatDate(timestamp)}</td>
         <td>${escapeHtml(importId)}</td>
+        <td>${escapeHtml(shopName)}</td>
         <td>${escapeHtml(String(quantity))}</td>
         <td>${escapeHtml(employeeName)}</td>
       </tr>`;
@@ -201,7 +219,7 @@ monthSelect.addEventListener("change", renderSummary);
 async function loadData() {
   if (!isConfigured()) {
     tableBody.innerHTML =
-      '<tr><td colspan="4" class="empty-row">ยังไม่ได้ตั้งค่า APPS_SCRIPT_URL ใน config.js</td></tr>';
+      '<tr><td colspan="5" class="empty-row">ยังไม่ได้ตั้งค่า APPS_SCRIPT_URL ใน config.js</td></tr>';
     summaryEmptyEl.textContent = "ยังไม่ได้ตั้งค่า APPS_SCRIPT_URL ใน config.js";
     summaryEmptyEl.style.display = "block";
     return;
@@ -216,7 +234,7 @@ async function loadData() {
     renderSummary();
   } catch (err) {
     tableBody.innerHTML =
-      '<tr><td colspan="4" class="empty-row">โหลดข้อมูลไม่สำเร็จ ลองรีเฟรชอีกครั้ง</td></tr>';
+      '<tr><td colspan="5" class="empty-row">โหลดข้อมูลไม่สำเร็จ ลองรีเฟรชอีกครั้ง</td></tr>';
     console.error(err);
   }
 }
@@ -233,11 +251,12 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const importId = document.getElementById("importId").value.trim();
+  const shopName = shopSelect ? shopSelect.value : "";
   const quantity = document.getElementById("quantity").value;
   const employeeName = document.getElementById("employeeName").value.trim();
 
-  if (!importId || !quantity || !employeeName) {
-    setStatus("กรุณากรอกข้อมูลให้ครบทุกช่อง", "error");
+  if (!importId || !shopName || !quantity || !employeeName) {
+    setStatus("กรุณากรอกข้อมูลให้ครบทุกช่อง (รวมถึงเลือกร้านค้า)", "error");
     return;
   }
 
@@ -253,7 +272,7 @@ form.addEventListener("submit", async (e) => {
   }
   setStep("config", "done");
 
-  const payload = { importId, quantity: Number(quantity), employeeName };
+  const payload = { importId, shopName, quantity: Number(quantity), employeeName };
 
   // ขั้นที่ 2: ส่งข้อมูลไปเซิร์ฟเวอร์
   setStep("send", "active");

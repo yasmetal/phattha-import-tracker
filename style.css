@@ -91,7 +91,8 @@ body {
   color: var(--text);
 }
 
-.field input {
+.field input,
+.field select {
   padding: 11px 13px;
   border: 1.5px solid var(--border);
   border-radius: 10px;
@@ -102,7 +103,13 @@ body {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.field input:focus {
+.field select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.field input:focus,
+.field select:focus {
   outline: none;
   border-color: var(--blue);
   box-shadow: 0 0 0 3px rgba(15, 127, 196, 0.15);

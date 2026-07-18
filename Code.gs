@@ -1,20 +1,19 @@
 /**
  * PHATTHA - ระบบบันทึกข้อมูลนำเข้าสินค้า
- * Google Apps Script backend
+ * Google Apps Script backend (เวอร์ชัน 2: เพิ่มคอลัมน์ "ร้านค้า")
  *
- * วิธีใช้:
- * 1. เปิด Google Sheet ที่ต้องการใช้เก็บข้อมูล (แถวแรกควรมีหัวตาราง
- *    Timestamp, ID เลขนำเข้า, จำนวน, ชื่อพนักงานนำเข้า)
- * 2. เมนู Extensions > Apps Script
- * 3. ลบโค้ดเดิมทั้งหมด แล้ววางไฟล์นี้ทั้งหมดแทน
- * 4. กด Deploy > New deployment > เลือกประเภท "Web app"
- *      - Execute as: Me
- *      - Who has access: Anyone
- * 5. คัดลอก URL ที่ได้ (ลงท้ายด้วย /exec) ไปใส่ใน config.js -> APPS_SCRIPT_URL
+ * วิธีอัปเดต (ถ้าเคย deploy แล้ว):
+ * 1. เปิด Google Sheet > Extensions > Apps Script
+ * 2. ลบโค้ดเดิมทั้งหมด แล้ววางไฟล์นี้ทั้งหมดแทน แล้วบันทึก (Ctrl+S)
+ * 3. กด Deploy > Manage deployments > ไอคอนดินสอ (แก้ไข)
+ *    > Version: เลือก "New version" > Deploy
+ *    (URL เดิมจะใช้ต่อได้ ไม่ต้องแก้ config.js)
+ *
+ * วิธี deploy ครั้งแรก: ดู README.md
  */
 
 const SHEET_NAME = "Data"; // ชื่อชีตที่จะใช้เก็บข้อมูล (แก้ได้ถ้าต้องการ)
-const HEADERS = ["Timestamp", "ID เลขนำเข้า", "จำนวน", "ชื่อพนักงานนำเข้า"];
+const HEADERS = ["Timestamp", "ID เลขนำเข้า", "จำนวน", "ชื่อพนักงานนำเข้า", "ร้านค้า"];
 
 function getSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -25,6 +24,12 @@ function getSheet_() {
   }
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
+  } else {
+    // เพิ่มหัวคอลัมน์ "ร้านค้า" (คอลัมน์ E) อัตโนมัติถ้ายังไม่มี
+    const headerE = sheet.getRange(1, 5).getValue();
+    if (!headerE) {
+      sheet.getRange(1, 5).setValue("ร้านค้า");
+    }
   }
   return sheet;
 }
@@ -35,13 +40,14 @@ function doPost(e) {
     const importId = body.importId;
     const quantity = body.quantity;
     const employeeName = body.employeeName;
+    const shopName = body.shopName || "";
 
     if (!importId || quantity === undefined || quantity === null || !employeeName) {
       return jsonResponse_({ status: "error", message: "ข้อมูลไม่ครบ" });
     }
 
     const sheet = getSheet_();
-    sheet.appendRow([new Date(), importId, quantity, employeeName]);
+    sheet.appendRow([new Date(), importId, quantity, employeeName, shopName]);
 
     return jsonResponse_({ status: "success" });
   } catch (err) {
@@ -60,6 +66,7 @@ function doGet(e) {
         importId: r[1],
         quantity: r[2],
         employeeName: r[3],
+        shopName: r[4] || "",
       };
     });
     return jsonResponse_({ status: "success", rows: rows });

@@ -27,6 +27,13 @@
           </div>
 
           <div class="field">
+            <label for="shopName">ร้านค้า</label>
+            <select id="shopName" name="shopName" required>
+              <option value="" disabled selected>— เลือกร้านค้า —</option>
+            </select>
+          </div>
+
+          <div class="field">
             <label for="quantity">จำนวน</label>
             <input type="number" id="quantity" name="quantity" placeholder="เช่น 100" min="0" step="1" required>
           </div>
@@ -73,12 +80,13 @@
               <tr>
                 <th>วันที่/เวลา</th>
                 <th>ID เลขนำเข้า</th>
+                <th>ร้านค้า</th>
                 <th>จำนวน</th>
                 <th>ชื่อพนักงานนำเข้า</th>
               </tr>
             </thead>
             <tbody id="dataTableBody">
-              <tr><td colspan="4" class="empty-row">ยังไม่มีข้อมูล</td></tr>
+              <tr><td colspan="5" class="empty-row">ยังไม่มีข้อมูล</td></tr>
             </tbody>
           </table>
         </div>
@@ -105,6 +113,7 @@
   </div>
 
   <script src="config.js"></script>
+  <script src="shops.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
