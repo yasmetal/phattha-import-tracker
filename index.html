@@ -44,6 +44,24 @@
         </form>
       </section>
 
+      <section class="card summary-card">
+        <div class="table-head">
+          <h2>สรุปยอดนำเข้ารายเดือน</h2>
+          <select id="monthSelect" class="month-select"></select>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-box">
+            <span class="summary-label">ยอดรวมนำเข้า (จำนวนเต็ม)</span>
+            <span class="summary-value" id="summaryTotal">0</span>
+          </div>
+          <div class="summary-box">
+            <span class="summary-label">ยอดสุทธิ (หัก 3%)</span>
+            <span class="summary-value" id="summaryNet">0</span>
+          </div>
+        </div>
+        <p id="summaryEmpty" class="empty-row" style="display:none;">ยังไม่มีข้อมูลในเดือนนี้</p>
+      </section>
+
       <section class="card table-card">
         <div class="table-head">
           <h2>รายการล่าสุด</h2>
@@ -70,6 +88,20 @@
     <footer class="footer">
       <span>PHATTHA</span>
     </footer>
+  </div>
+
+  <div id="submitModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>สถานะการบันทึกข้อมูล</h3>
+      <ul class="steps">
+        <li id="stepConfig" class="step pending"><span class="step-icon">⏳</span><span class="step-text">ตรวจสอบการตั้งค่าระบบ</span></li>
+        <li id="stepSend" class="step pending"><span class="step-icon">⏳</span><span class="step-text">ส่งข้อมูลไปเซิร์ฟเวอร์</span></li>
+        <li id="stepReceive" class="step pending"><span class="step-icon">⏳</span><span class="step-text">รับการตอบกลับจากเซิร์ฟเวอร์</span></li>
+        <li id="stepSave" class="step pending"><span class="step-icon">⏳</span><span class="step-text">บันทึกลง Google Sheet</span></li>
+      </ul>
+      <p id="modalMessage" class="modal-message"></p>
+      <button type="button" id="modalCloseBtn" class="ghost-btn modal-close">ปิด</button>
+    </div>
   </div>
 
   <script src="config.js"></script>

@@ -206,6 +206,119 @@ tbody tr:hover { background: #fafafe; }
   letter-spacing: 0.06em;
 }
 
+/* Monthly summary */
+.month-select {
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  color: var(--navy);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.summary-box {
+  background: #f6f6fb;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summary-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.summary-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+#summaryNet {
+  color: var(--mauve);
+}
+
+@media (max-width: 520px) {
+  .summary-grid { grid-template-columns: 1fr; }
+}
+
+/* Submit status modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 46, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.modal-overlay.hidden { display: none; }
+
+.modal {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(20, 18, 46, 0.3);
+}
+
+.modal h3 {
+  margin: 0 0 16px;
+  color: var(--navy);
+  font-size: 1.05rem;
+}
+
+.steps {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.step.done { color: #1a8a4a; }
+.step.failed { color: #c9345b; }
+.step.active { color: var(--navy); font-weight: 600; }
+
+.step-icon { flex-shrink: 0; width: 20px; text-align: center; }
+
+.modal-message {
+  min-height: 18px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.modal-close {
+  width: 100%;
+  text-align: center;
+}
+
 @media (max-width: 520px) {
   .title-block h1 { font-size: 1.1rem; }
   .card { padding: 18px 14px; }
