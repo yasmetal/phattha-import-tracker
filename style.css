@@ -36,11 +36,25 @@ body {
   padding: 12px 4px 28px;
 }
 
-.logo {
-  width: 56px;
-  height: 56px;
-  object-fit: contain;
+.logo-wrap {
+  width: 64px;
+  height: 64px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 10px;
+}
+
+.logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .title-block h1 {
