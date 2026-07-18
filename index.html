@@ -17,82 +17,179 @@
         <h1>ระบบบันทึกข้อมูลนำเข้าสินค้า</h1>
         <p class="subtitle">PHATTHA Import Log</p>
       </div>
+      <button id="refreshBtn" type="button" class="ghost-btn refresh-top" title="โหลดข้อมูลใหม่">
+        ⟳ รีเฟรช
+      </button>
     </header>
 
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="entry" role="tab">📝 บันทึกข้อมูล</button>
+      <button class="tab" data-tab="dashboard" role="tab">📊 แดชบอร์ดร้านค้า</button>
+      <button class="tab" data-tab="records" role="tab">📋 รายการทั้งหมด</button>
+    </nav>
+
     <main class="content">
-      <section class="card form-card">
-        <h2>กรอกข้อมูลนำเข้า</h2>
-        <form id="importForm" novalidate>
-          <div class="field">
-            <label for="importId">ID เลขนำเข้า</label>
-            <input type="text" id="importId" name="importId" placeholder="เช่น IMP-0001" required>
+
+      <!-- ============ TAB 1: บันทึกข้อมูล ============ -->
+      <section id="tab-entry" class="tab-panel active">
+        <section class="card form-card">
+          <h2>กรอกข้อมูลนำเข้า</h2>
+          <form id="importForm" novalidate>
+            <div class="field">
+              <label for="importId">🔖 ID เลขนำเข้า</label>
+              <input type="text" id="importId" name="importId" placeholder="เช่น IMP-0001" required>
+            </div>
+
+            <div class="field">
+              <label for="shopName">🏪 ร้านค้า</label>
+              <input type="text" id="shopName" name="shopName" list="shopsDatalist"
+                     placeholder="พิมพ์เพื่อค้นหาร้านค้า..." autocomplete="off" required>
+              <datalist id="shopsDatalist"></datalist>
+              <p class="field-hint">พิมพ์บางส่วนของชื่อร้านเพื่อค้นหา แล้วเลือกจากรายการ</p>
+            </div>
+
+            <div class="field">
+              <label for="quantity">📦 จำนวน</label>
+              <input type="number" id="quantity" name="quantity" placeholder="เช่น 100" min="0" step="1" required>
+            </div>
+
+            <div class="field">
+              <label for="employeeName">👤 ชื่อพนักงานนำเข้า</label>
+              <input type="text" id="employeeName" name="employeeName" placeholder="เช่น สมชาย ใจดี" required>
+            </div>
+
+            <button type="submit" id="submitBtn">
+              <span class="btn-text">💾 บันทึกข้อมูล</span>
+            </button>
+
+            <p id="formStatus" class="form-status" role="status"></p>
+          </form>
+        </section>
+
+        <section class="card summary-card">
+          <div class="card-head">
+            <h2>สรุปยอดรวมทุกร้าน</h2>
+            <select id="monthSelect" class="month-select"></select>
           </div>
-
-          <div class="field">
-            <label for="shopName">ร้านค้า</label>
-            <select id="shopName" name="shopName" required>
-              <option value="" disabled selected>— เลือกร้านค้า —</option>
-            </select>
+          <div class="summary-grid">
+            <div class="summary-box">
+              <span class="summary-label">ยอดรวมนำเข้า</span>
+              <span class="summary-value" id="summaryTotal">0</span>
+            </div>
+            <div class="summary-box">
+              <span class="summary-label">ยอดสุทธิ (หัก 3%)</span>
+              <span class="summary-value accent-mauve" id="summaryNet">0</span>
+            </div>
+            <div class="summary-box">
+              <span class="summary-label">จำนวนรายการ</span>
+              <span class="summary-value accent-blue" id="summaryCount">0</span>
+            </div>
+            <div class="summary-box">
+              <span class="summary-label">ร้านที่นำเข้า</span>
+              <span class="summary-value accent-pink" id="summaryShops">0</span>
+            </div>
           </div>
-
-          <div class="field">
-            <label for="quantity">จำนวน</label>
-            <input type="number" id="quantity" name="quantity" placeholder="เช่น 100" min="0" step="1" required>
-          </div>
-
-          <div class="field">
-            <label for="employeeName">ชื่อพนักงานนำเข้า</label>
-            <input type="text" id="employeeName" name="employeeName" placeholder="เช่น สมชาย ใจดี" required>
-          </div>
-
-          <button type="submit" id="submitBtn">
-            <span class="btn-text">บันทึกข้อมูล</span>
-          </button>
-
-          <p id="formStatus" class="form-status" role="status"></p>
-        </form>
+          <p id="summaryEmpty" class="empty-row" style="display:none;">ยังไม่มีข้อมูลในเดือนนี้</p>
+        </section>
       </section>
 
-      <section class="card summary-card">
-        <div class="table-head">
-          <h2>สรุปยอดนำเข้ารายเดือน</h2>
-          <select id="monthSelect" class="month-select"></select>
-        </div>
-        <div class="summary-grid">
-          <div class="summary-box">
-            <span class="summary-label">ยอดรวมนำเข้า (จำนวนเต็ม)</span>
-            <span class="summary-value" id="summaryTotal">0</span>
+      <!-- ============ TAB 2: แดชบอร์ดร้านค้า ============ -->
+      <section id="tab-dashboard" class="tab-panel">
+        <section class="card">
+          <div class="card-head wrap">
+            <h2>แดชบอร์ดร้านค้า</h2>
+            <div class="dash-controls">
+              <select id="dashShopSelect" class="month-select"></select>
+              <select id="dashMonthSelect" class="month-select"></select>
+            </div>
           </div>
-          <div class="summary-box">
-            <span class="summary-label">ยอดสุทธิ (หัก 3%)</span>
-            <span class="summary-value" id="summaryNet">0</span>
+
+          <!-- KPI ของร้านที่เลือก / ภาพรวม -->
+          <div class="summary-grid" id="dashKpis">
+            <div class="summary-box">
+              <span class="summary-label">ยอดนำเข้าเดือนนี้</span>
+              <span class="summary-value" id="dashTotal">0</span>
+            </div>
+            <div class="summary-box">
+              <span class="summary-label">ยอดสุทธิ (หัก 3%)</span>
+              <span class="summary-value accent-mauve" id="dashNet">0</span>
+            </div>
+            <div class="summary-box">
+              <span class="summary-label">จำนวนรายการ</span>
+              <span class="summary-value accent-blue" id="dashCount">0</span>
+            </div>
+            <div class="summary-box">
+              <span class="summary-label">ยอดสะสมทั้งหมด</span>
+              <span class="summary-value accent-pink" id="dashAllTime">0</span>
+            </div>
           </div>
-        </div>
-        <p id="summaryEmpty" class="empty-row" style="display:none;">ยังไม่มีข้อมูลในเดือนนี้</p>
+        </section>
+
+        <!-- ภาพรวมทุกร้าน: อันดับร้านค้า -->
+        <section class="card" id="rankCard">
+          <div class="card-head">
+            <h2>อันดับร้านค้า (เดือนที่เลือก)</h2>
+          </div>
+          <div id="shopRanking" class="ranking-list"></div>
+          <p id="rankEmpty" class="empty-row" style="display:none;">ยังไม่มีข้อมูลในเดือนนี้</p>
+        </section>
+
+        <!-- แนวโน้มรายเดือนของร้านที่เลือก -->
+        <section class="card" id="trendCard" style="display:none;">
+          <div class="card-head">
+            <h2>แนวโน้มย้อนหลัง 6 เดือน</h2>
+          </div>
+          <div id="trendChart" class="trend-chart"></div>
+        </section>
+
+        <!-- รายการล่าสุดของร้านที่เลือก -->
+        <section class="card" id="shopRecentCard" style="display:none;">
+          <div class="card-head">
+            <h2>รายการล่าสุดของร้านนี้</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>วันที่/เวลา</th>
+                  <th>ID เลขนำเข้า</th>
+                  <th>จำนวน</th>
+                  <th>พนักงาน</th>
+                </tr>
+              </thead>
+              <tbody id="shopRecentBody"></tbody>
+            </table>
+          </div>
+        </section>
       </section>
 
-      <section class="card table-card">
-        <div class="table-head">
-          <h2>รายการล่าสุด</h2>
-          <button id="refreshBtn" type="button" class="ghost-btn">รีเฟรช</button>
-        </div>
-        <div class="table-wrap">
-          <table id="dataTable">
-            <thead>
-              <tr>
-                <th>วันที่/เวลา</th>
-                <th>ID เลขนำเข้า</th>
-                <th>ร้านค้า</th>
-                <th>จำนวน</th>
-                <th>ชื่อพนักงานนำเข้า</th>
-              </tr>
-            </thead>
-            <tbody id="dataTableBody">
-              <tr><td colspan="5" class="empty-row">ยังไม่มีข้อมูล</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <!-- ============ TAB 3: รายการทั้งหมด ============ -->
+      <section id="tab-records" class="tab-panel">
+        <section class="card table-card">
+          <div class="card-head wrap">
+            <h2>รายการทั้งหมด</h2>
+            <input type="search" id="recordSearch" class="search-input"
+                   placeholder="🔍 ค้นหา ID / ร้านค้า / พนักงาน...">
+          </div>
+          <div class="table-wrap">
+            <table id="dataTable">
+              <thead>
+                <tr>
+                  <th>วันที่/เวลา</th>
+                  <th>ID เลขนำเข้า</th>
+                  <th>ร้านค้า</th>
+                  <th>จำนวน</th>
+                  <th>พนักงาน</th>
+                </tr>
+              </thead>
+              <tbody id="dataTableBody">
+                <tr><td colspan="5" class="empty-row">กำลังโหลดข้อมูล...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </section>
+
     </main>
 
     <footer class="footer">

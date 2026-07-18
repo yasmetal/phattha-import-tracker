@@ -1,15 +1,15 @@
 /**
  * PHATTHA - ระบบบันทึกข้อมูลนำเข้าสินค้า
- * Google Apps Script backend (เวอร์ชัน 2: เพิ่มคอลัมน์ "ร้านค้า")
+ * Google Apps Script backend (เวอร์ชัน 2: เพิ่มคอลัมน์ร้านค้า)
  *
  * วิธีอัปเดต (ถ้าเคย deploy แล้ว):
  * 1. เปิด Google Sheet > Extensions > Apps Script
- * 2. ลบโค้ดเดิมทั้งหมด แล้ววางไฟล์นี้ทั้งหมดแทน แล้วบันทึก (Ctrl+S)
- * 3. กด Deploy > Manage deployments > ไอคอนดินสอ (แก้ไข)
- *    > Version: เลือก "New version" > Deploy
- *    (URL เดิมจะใช้ต่อได้ ไม่ต้องแก้ config.js)
+ * 2. ลบโค้ดเดิม วางไฟล์นี้แทน แล้วกดบันทึก
+ * 3. Deploy > Manage deployments > กดไอคอนดินสอ > Version: New version > Deploy
+ *    (URL เดิมจะใช้ได้ต่อ ไม่ต้องแก้ config.js)
  *
- * วิธี deploy ครั้งแรก: ดู README.md
+ * หมายเหตุ: คอลัมน์ "ร้านค้า" ถูกเพิ่มไว้ท้ายตาราง (คอลัมน์ E)
+ * แถวข้อมูลเก่าที่ไม่มีร้านค้าจะยังแสดงผลได้ตามปกติ
  */
 
 const SHEET_NAME = "Data"; // ชื่อชีตที่จะใช้เก็บข้อมูล (แก้ได้ถ้าต้องการ)
@@ -25,9 +25,9 @@ function getSheet_() {
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
   } else {
-    // เพิ่มหัวคอลัมน์ "ร้านค้า" (คอลัมน์ E) อัตโนมัติถ้ายังไม่มี
-    const headerE = sheet.getRange(1, 5).getValue();
-    if (!headerE) {
+    // เพิ่มหัวคอลัมน์ "ร้านค้า" ถ้ายังไม่มี (สำหรับชีตเก่า)
+    const firstRow = sheet.getRange(1, 1, 1, 5).getValues()[0];
+    if (!firstRow[4]) {
       sheet.getRange(1, 5).setValue("ร้านค้า");
     }
   }

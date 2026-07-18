@@ -3,17 +3,36 @@
 
 const FETCH_TIMEOUT_MS = 15000;
 const DEDUCTION_RATE = 0.03; // หัก 3%
+const ALL_SHOPS = "__ALL__";
 
 const form = document.getElementById("importForm");
 const submitBtn = document.getElementById("submitBtn");
 const formStatus = document.getElementById("formStatus");
 const tableBody = document.getElementById("dataTableBody");
 const refreshBtn = document.getElementById("refreshBtn");
+const recordSearch = document.getElementById("recordSearch");
 
 const monthSelect = document.getElementById("monthSelect");
 const summaryTotalEl = document.getElementById("summaryTotal");
 const summaryNetEl = document.getElementById("summaryNet");
+const summaryCountEl = document.getElementById("summaryCount");
+const summaryShopsEl = document.getElementById("summaryShops");
 const summaryEmptyEl = document.getElementById("summaryEmpty");
+
+// Dashboard elements
+const dashShopSelect = document.getElementById("dashShopSelect");
+const dashMonthSelect = document.getElementById("dashMonthSelect");
+const dashTotalEl = document.getElementById("dashTotal");
+const dashNetEl = document.getElementById("dashNet");
+const dashCountEl = document.getElementById("dashCount");
+const dashAllTimeEl = document.getElementById("dashAllTime");
+const rankCard = document.getElementById("rankCard");
+const shopRankingEl = document.getElementById("shopRanking");
+const rankEmptyEl = document.getElementById("rankEmpty");
+const trendCard = document.getElementById("trendCard");
+const trendChartEl = document.getElementById("trendChart");
+const shopRecentCard = document.getElementById("shopRecentCard");
+const shopRecentBody = document.getElementById("shopRecentBody");
 
 // Modal elements
 const submitModal = document.getElementById("submitModal");
@@ -28,21 +47,7 @@ const stepEls = {
 
 let allRows = [];
 
-/* ---------------- Shop dropdown ---------------- */
-
-const shopSelect = document.getElementById("shopName");
-
-function populateShopSelect() {
-  if (!shopSelect || typeof SHOP_LIST === "undefined") return;
-  SHOP_LIST.forEach((name) => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    shopSelect.appendChild(opt);
-  });
-}
-
-populateShopSelect();
+/* ---------------- Helpers ---------------- */
 
 function isConfigured() {
   return (
@@ -83,6 +88,62 @@ function formatNumber(n, decimals) {
     minimumFractionDigits: decimals || 0,
     maximumFractionDigits: decimals || 0,
   });
+}
+
+function rowField(row, ...keys) {
+  for (const k of keys) {
+    if (row[k] !== undefined && row[k] !== null && row[k] !== "") return row[k];
+  }
+  return "";
+}
+
+function rowTimestamp(row) { return rowField(row, "timestamp", "Timestamp"); }
+function rowImportId(row) { return rowField(row, "importId", "ID เลขนำเข้า"); }
+function rowQuantity(row) {
+  const q = Number(rowField(row, "quantity", "จำนวน") || 0);
+  return isNaN(q) ? 0 : q;
+}
+function rowEmployee(row) { return rowField(row, "employeeName", "ชื่อพนักงานนำเข้า"); }
+function rowShop(row) { return rowField(row, "shopName", "ร้านค้า") || "(ไม่ระบุร้าน)"; }
+
+function monthKeyOf(row) {
+  const d = new Date(rowTimestamp(row));
+  if (isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthLabel(key) {
+  const [y, m] = key.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString("th-TH", { year: "numeric", month: "long" });
+}
+
+function monthLabelShort(key) {
+  const [y, m] = key.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString("th-TH", { year: "2-digit", month: "short" });
+}
+
+function currentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/* ---------------- Tabs ---------------- */
+
+document.querySelectorAll(".tab").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+/* ---------------- Shop datalist ---------------- */
+
+function populateShopDatalist() {
+  const dl = document.getElementById("shopsDatalist");
+  if (!dl || typeof SHOP_LIST === "undefined") return;
+  dl.innerHTML = SHOP_LIST.map((s) => `<option value="${escapeHtml(s)}"></option>`).join("");
 }
 
 /* ---------------- Modal / step status ---------------- */
@@ -127,7 +188,7 @@ submitModal.addEventListener("click", (e) => {
   if (e.target === submitModal) closeModal();
 });
 
-/* ---------------- Data loading ---------------- */
+/* ---------------- Records table ---------------- */
 
 function renderRows(rows) {
   if (!rows || rows.length === 0) {
@@ -136,59 +197,64 @@ function renderRows(rows) {
   }
   const sorted = rows.slice().reverse(); // ล่าสุดขึ้นก่อน
   tableBody.innerHTML = sorted
-    .map((row) => {
-      const timestamp = row.timestamp || row.Timestamp || "";
-      const importId = row.importId || row["ID เลขนำเข้า"] || "";
-      const shopName = row.shopName || row["ร้านค้า"] || "-";
-      const quantity = row.quantity || row["จำนวน"] || "";
-      const employeeName = row.employeeName || row["ชื่อพนักงานนำเข้า"] || "";
-      return `<tr>
-        <td>${formatDate(timestamp)}</td>
-        <td>${escapeHtml(importId)}</td>
-        <td>${escapeHtml(shopName)}</td>
-        <td>${escapeHtml(String(quantity))}</td>
-        <td>${escapeHtml(employeeName)}</td>
-      </tr>`;
-    })
+    .map(
+      (row) => `<tr>
+        <td>${formatDate(rowTimestamp(row))}</td>
+        <td>${escapeHtml(rowImportId(row))}</td>
+        <td>${escapeHtml(rowShop(row))}</td>
+        <td>${formatNumber(rowQuantity(row))}</td>
+        <td>${escapeHtml(rowEmployee(row))}</td>
+      </tr>`
+    )
     .join("");
 }
 
-/* ---------------- Monthly summary ---------------- */
-
-function monthKeyOf(row) {
-  const raw = row.timestamp || row.Timestamp || "";
-  const d = new Date(raw);
-  if (isNaN(d.getTime())) return null;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  return `${y}-${m}`;
-}
-
-function monthLabel(key) {
-  const [y, m] = key.split("-").map(Number);
-  const d = new Date(y, m - 1, 1);
-  return d.toLocaleDateString("th-TH", { year: "numeric", month: "long" });
-}
-
-function populateMonthSelect(rows) {
-  const keys = new Set(rows.map(monthKeyOf).filter(Boolean));
-  const now = new Date();
-  const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  keys.add(currentKey);
-
-  const sortedKeys = Array.from(keys).sort().reverse();
-  const previousValue = monthSelect.value;
-
-  monthSelect.innerHTML = sortedKeys
-    .map((k) => `<option value="${k}">${monthLabel(k)}</option>`)
-    .join("");
-
-  if (previousValue && sortedKeys.includes(previousValue)) {
-    monthSelect.value = previousValue;
-  } else {
-    monthSelect.value = currentKey;
+function applyRecordSearch() {
+  const q = (recordSearch.value || "").trim().toLowerCase();
+  if (!q) {
+    renderRows(allRows);
+    return;
   }
+  const filtered = allRows.filter((r) => {
+    return (
+      String(rowImportId(r)).toLowerCase().includes(q) ||
+      String(rowShop(r)).toLowerCase().includes(q) ||
+      String(rowEmployee(r)).toLowerCase().includes(q)
+    );
+  });
+  renderRows(filtered);
 }
+
+recordSearch.addEventListener("input", applyRecordSearch);
+
+/* ---------------- Month selects ---------------- */
+
+function populateMonthSelects(rows) {
+  const keys = new Set(rows.map(monthKeyOf).filter(Boolean));
+  keys.add(currentMonthKey());
+  const sortedKeys = Array.from(keys).sort().reverse();
+
+  [monthSelect, dashMonthSelect].forEach((sel) => {
+    const prev = sel.value;
+    sel.innerHTML = sortedKeys.map((k) => `<option value="${k}">${monthLabel(k)}</option>`).join("");
+    sel.value = prev && sortedKeys.includes(prev) ? prev : currentMonthKey();
+  });
+}
+
+function populateDashShopSelect(rows) {
+  const shopsInData = new Set(rows.map(rowShop).filter((s) => s && s !== "(ไม่ระบุร้าน)"));
+  const listed = typeof SHOP_LIST !== "undefined" ? SHOP_LIST : [];
+  listed.forEach((s) => shopsInData.add(s));
+  const shops = Array.from(shopsInData).sort((a, b) => a.localeCompare(b, "th"));
+
+  const prev = dashShopSelect.value;
+  dashShopSelect.innerHTML =
+    `<option value="${ALL_SHOPS}">🏪 ทุกร้านค้า (ภาพรวม)</option>` +
+    shops.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+  dashShopSelect.value = prev && (prev === ALL_SHOPS || shops.includes(prev)) ? prev : ALL_SHOPS;
+}
+
+/* ---------------- Summary (tab 1) ---------------- */
 
 function renderSummary() {
   const selectedKey = monthSelect.value;
@@ -197,24 +263,144 @@ function renderSummary() {
   if (monthRows.length === 0) {
     summaryTotalEl.textContent = "0";
     summaryNetEl.textContent = "0";
+    summaryCountEl.textContent = "0";
+    summaryShopsEl.textContent = "0";
     summaryEmptyEl.style.display = "block";
     return;
   }
 
   summaryEmptyEl.style.display = "none";
+  const total = monthRows.reduce((sum, r) => sum + rowQuantity(r), 0);
+  const shops = new Set(monthRows.map(rowShop));
 
-  const total = monthRows.reduce((sum, r) => {
-    const q = Number(r.quantity || r["จำนวน"] || 0);
-    return sum + (isNaN(q) ? 0 : q);
-  }, 0);
-
-  const net = total * (1 - DEDUCTION_RATE);
-
-  summaryTotalEl.textContent = formatNumber(Math.round(total), 0);
-  summaryNetEl.textContent = formatNumber(net, 2);
+  summaryTotalEl.textContent = formatNumber(Math.round(total));
+  summaryNetEl.textContent = formatNumber(total * (1 - DEDUCTION_RATE), 2);
+  summaryCountEl.textContent = formatNumber(monthRows.length);
+  summaryShopsEl.textContent = formatNumber(shops.size);
 }
 
 monthSelect.addEventListener("change", renderSummary);
+
+/* ---------------- Dashboard (tab 2) ---------------- */
+
+function renderDashboard() {
+  const monthKey = dashMonthSelect.value;
+  const shop = dashShopSelect.value;
+  const isAll = shop === ALL_SHOPS;
+
+  const shopRows = isAll ? allRows : allRows.filter((r) => rowShop(r) === shop);
+  const monthRows = shopRows.filter((r) => monthKeyOf(r) === monthKey);
+
+  // KPI
+  const total = monthRows.reduce((s, r) => s + rowQuantity(r), 0);
+  const allTime = shopRows.reduce((s, r) => s + rowQuantity(r), 0);
+  dashTotalEl.textContent = formatNumber(Math.round(total));
+  dashNetEl.textContent = formatNumber(total * (1 - DEDUCTION_RATE), 2);
+  dashCountEl.textContent = formatNumber(monthRows.length);
+  dashAllTimeEl.textContent = formatNumber(Math.round(allTime));
+
+  // อันดับร้านค้า — เฉพาะโหมดภาพรวม
+  if (isAll) {
+    rankCard.style.display = "";
+    trendCard.style.display = "none";
+    shopRecentCard.style.display = "none";
+    renderRanking(monthKey);
+  } else {
+    rankCard.style.display = "none";
+    trendCard.style.display = "";
+    shopRecentCard.style.display = "";
+    renderTrend(shopRows);
+    renderShopRecent(shopRows);
+  }
+}
+
+function renderRanking(monthKey) {
+  const monthRows = allRows.filter((r) => monthKeyOf(r) === monthKey);
+  const byShop = new Map();
+  monthRows.forEach((r) => {
+    const s = rowShop(r);
+    byShop.set(s, (byShop.get(s) || 0) + rowQuantity(r));
+  });
+
+  const ranked = Array.from(byShop.entries()).sort((a, b) => b[1] - a[1]);
+
+  if (ranked.length === 0) {
+    shopRankingEl.innerHTML = "";
+    rankEmptyEl.style.display = "block";
+    return;
+  }
+  rankEmptyEl.style.display = "none";
+
+  const max = ranked[0][1] || 1;
+  shopRankingEl.innerHTML = ranked
+    .map(
+      ([s, qty], i) => `<div class="rank-row">
+        <span class="rank-no">${i + 1}</span>
+        <div class="rank-main">
+          <div class="rank-shop" data-shop="${escapeHtml(s)}" title="ดูแดชบอร์ดร้านนี้">${escapeHtml(s)}</div>
+          <div class="rank-bar-track"><div class="rank-bar" style="width:${Math.max(4, (qty / max) * 100)}%"></div></div>
+        </div>
+        <span class="rank-value">${formatNumber(Math.round(qty))}</span>
+      </div>`
+    )
+    .join("");
+
+  // คลิกชื่อร้านเพื่อเจาะดูร้านนั้น
+  shopRankingEl.querySelectorAll(".rank-shop").forEach((el) => {
+    el.addEventListener("click", () => {
+      dashShopSelect.value = el.dataset.shop;
+      renderDashboard();
+    });
+  });
+}
+
+function renderTrend(shopRows) {
+  // 6 เดือนล่าสุด (นับจากเดือนปัจจุบันย้อนหลัง)
+  const now = new Date();
+  const keys = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  }
+
+  const totals = keys.map((k) =>
+    shopRows.filter((r) => monthKeyOf(r) === k).reduce((s, r) => s + rowQuantity(r), 0)
+  );
+  const max = Math.max(...totals, 1);
+
+  trendChartEl.innerHTML = keys
+    .map(
+      (k, i) => `<div class="trend-col">
+        <span class="trend-value">${totals[i] > 0 ? formatNumber(Math.round(totals[i])) : ""}</span>
+        <div class="trend-bar" style="height:${Math.max(3, (totals[i] / max) * 100)}%"></div>
+        <span class="trend-label">${monthLabelShort(k)}</span>
+      </div>`
+    )
+    .join("");
+}
+
+function renderShopRecent(shopRows) {
+  const recent = shopRows.slice().reverse().slice(0, 10);
+  if (recent.length === 0) {
+    shopRecentBody.innerHTML = '<tr><td colspan="4" class="empty-row">ยังไม่มีข้อมูลของร้านนี้</td></tr>';
+    return;
+  }
+  shopRecentBody.innerHTML = recent
+    .map(
+      (r) => `<tr>
+        <td>${formatDate(rowTimestamp(r))}</td>
+        <td>${escapeHtml(rowImportId(r))}</td>
+        <td>${formatNumber(rowQuantity(r))}</td>
+        <td>${escapeHtml(rowEmployee(r))}</td>
+      </tr>`
+    )
+    .join("");
+}
+
+dashShopSelect.addEventListener("change", renderDashboard);
+dashMonthSelect.addEventListener("change", renderDashboard);
+
+/* ---------------- Data loading ---------------- */
 
 async function loadData() {
   if (!isConfigured()) {
@@ -229,9 +415,11 @@ async function loadData() {
     const data = await res.json();
     const rows = data.rows || data || [];
     allRows = Array.isArray(rows) ? rows : [];
-    renderRows(allRows);
-    populateMonthSelect(allRows);
+    applyRecordSearch();
+    populateMonthSelects(allRows);
+    populateDashShopSelect(allRows);
     renderSummary();
+    renderDashboard();
   } catch (err) {
     tableBody.innerHTML =
       '<tr><td colspan="5" class="empty-row">โหลดข้อมูลไม่สำเร็จ ลองรีเฟรชอีกครั้ง</td></tr>';
@@ -251,12 +439,17 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const importId = document.getElementById("importId").value.trim();
-  const shopName = shopSelect ? shopSelect.value : "";
+  const shopName = document.getElementById("shopName").value.trim();
   const quantity = document.getElementById("quantity").value;
   const employeeName = document.getElementById("employeeName").value.trim();
 
   if (!importId || !shopName || !quantity || !employeeName) {
-    setStatus("กรุณากรอกข้อมูลให้ครบทุกช่อง (รวมถึงเลือกร้านค้า)", "error");
+    setStatus("กรุณากรอกข้อมูลให้ครบทุกช่อง", "error");
+    return;
+  }
+
+  if (typeof SHOP_LIST !== "undefined" && !SHOP_LIST.includes(shopName)) {
+    setStatus("กรุณาเลือกร้านค้าจากรายการเท่านั้น (พิมพ์บางส่วนของชื่อแล้วเลือกจากตัวเลือกที่ขึ้นมา)", "error");
     return;
   }
 
@@ -335,4 +528,7 @@ form.addEventListener("submit", async (e) => {
 
 refreshBtn.addEventListener("click", loadData);
 
+/* ---------------- Init ---------------- */
+
+populateShopDatalist();
 loadData();
