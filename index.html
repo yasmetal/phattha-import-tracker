@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHATTHA | ระบบบันทึกข้อมูลนำเข้าสินค้า</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <img src="logo.png" alt="PHATTHA logo" class="logo">
+      <div class="title-block">
+        <h1>ระบบบันทึกข้อมูลนำเข้าสินค้า</h1>
+        <p class="subtitle">PHATTHA Import Log</p>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="card form-card">
+        <h2>กรอกข้อมูลนำเข้า</h2>
+        <form id="importForm" novalidate>
+          <div class="field">
+            <label for="importId">ID เลขนำเข้า</label>
+            <input type="text" id="importId" name="importId" placeholder="เช่น IMP-0001" required>
+          </div>
+
+          <div class="field">
+            <label for="quantity">จำนวน</label>
+            <input type="number" id="quantity" name="quantity" placeholder="เช่น 100" min="0" step="1" required>
+          </div>
+
+          <div class="field">
+            <label for="employeeName">ชื่อพนักงานนำเข้า</label>
+            <input type="text" id="employeeName" name="employeeName" placeholder="เช่น สมชาย ใจดี" required>
+          </div>
+
+          <button type="submit" id="submitBtn">
+            <span class="btn-text">บันทึกข้อมูล</span>
+          </button>
+
+          <p id="formStatus" class="form-status" role="status"></p>
+        </form>
+      </section>
+
+      <section class="card table-card">
+        <div class="table-head">
+          <h2>รายการล่าสุด</h2>
+          <button id="refreshBtn" type="button" class="ghost-btn">รีเฟรช</button>
+        </div>
+        <div class="table-wrap">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th>วันที่/เวลา</th>
+                <th>ID เลขนำเข้า</th>
+                <th>จำนวน</th>
+                <th>ชื่อพนักงานนำเข้า</th>
+              </tr>
+            </thead>
+            <tbody id="dataTableBody">
+              <tr><td colspan="4" class="empty-row">ยังไม่มีข้อมูล</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>PHATTHA</span>
+    </footer>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
