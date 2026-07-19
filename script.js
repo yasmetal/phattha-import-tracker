@@ -138,12 +138,43 @@ document.querySelectorAll(".tab").forEach((btn) => {
   });
 });
 
-/* ---------------- Shop datalist ---------------- */
+/* ---------------- Shop dropdown + custom input ---------------- */
 
-function populateShopDatalist() {
+const CUSTOM_SHOP = "__CUSTOM__";
+const shopSelect = document.getElementById("shopSelect");
+const shopNameCustom = document.getElementById("shopNameCustom");
+
+function populateShopSelect() {
+  if (!shopSelect || typeof SHOP_LIST === "undefined") return;
+  const options = SHOP_LIST.slice()
+    .sort((a, b) => a.localeCompare(b, "th"))
+    .map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`)
+    .join("");
+  shopSelect.innerHTML =
+    '<option value="" selected disabled>— เลือกร้านค้า —</option>' +
+    options +
+    `<option value="${CUSTOM_SHOP}">✏️ พิมพ์ชื่อร้านเอง (ร้านใหม่)</option>`;
+
+  // datalist ช่วย autocomplete ตอนพิมพ์เอง
   const dl = document.getElementById("shopsDatalist");
-  if (!dl || typeof SHOP_LIST === "undefined") return;
-  dl.innerHTML = SHOP_LIST.map((s) => `<option value="${escapeHtml(s)}"></option>`).join("");
+  if (dl) {
+    dl.innerHTML = SHOP_LIST.map((s) => `<option value="${escapeHtml(s)}"></option>`).join("");
+  }
+}
+
+function syncCustomShopVisibility() {
+  const isCustom = shopSelect.value === CUSTOM_SHOP;
+  shopNameCustom.style.display = isCustom ? "" : "none";
+  shopNameCustom.required = isCustom;
+  if (isCustom) shopNameCustom.focus();
+  else shopNameCustom.value = "";
+}
+
+shopSelect.addEventListener("change", syncCustomShopVisibility);
+
+function getSelectedShopName() {
+  if (shopSelect.value === CUSTOM_SHOP) return shopNameCustom.value.trim();
+  return (shopSelect.value || "").trim();
 }
 
 /* ---------------- Modal / step status ---------------- */
@@ -439,17 +470,17 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const importId = document.getElementById("importId").value.trim();
-  const shopName = document.getElementById("shopName").value.trim();
+  const shopName = getSelectedShopName();
   const quantity = document.getElementById("quantity").value;
   const employeeName = document.getElementById("employeeName").value.trim();
 
   if (!importId || !shopName || !quantity || !employeeName) {
-    setStatus("กรุณากรอกข้อมูลให้ครบทุกช่อง", "error");
-    return;
-  }
-
-  if (typeof SHOP_LIST !== "undefined" && !SHOP_LIST.includes(shopName)) {
-    setStatus("กรุณาเลือกร้านค้าจากรายการเท่านั้น (พิมพ์บางส่วนของชื่อแล้วเลือกจากตัวเลือกที่ขึ้นมา)", "error");
+    setStatus(
+      shopSelect.value === CUSTOM_SHOP && !shopName
+        ? "กรุณาพิมพ์ชื่อร้านค้าในช่องที่แสดงขึ้นมา"
+        : "กรุณากรอกข้อมูลให้ครบทุกช่อง",
+      "error"
+    );
     return;
   }
 
@@ -517,6 +548,7 @@ form.addEventListener("submit", async (e) => {
     modalMessage.className = "modal-message success";
     setStatus("บันทึกข้อมูลสำเร็จ", "success");
     form.reset();
+    syncCustomShopVisibility();
     await loadData();
   } else {
     failAt("save", "บันทึกไม่สำเร็จ: " + (result && result.message ? result.message : "เซิร์ฟเวอร์ไม่ยืนยันการบันทึก"));
@@ -530,5 +562,5 @@ refreshBtn.addEventListener("click", loadData);
 
 /* ---------------- Init ---------------- */
 
-populateShopDatalist();
+populateShopSelect();
 loadData();

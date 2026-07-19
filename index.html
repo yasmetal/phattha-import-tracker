@@ -41,11 +41,15 @@
             </div>
 
             <div class="field">
-              <label for="shopName">🏪 ร้านค้า</label>
-              <input type="text" id="shopName" name="shopName" list="shopsDatalist"
-                     placeholder="พิมพ์เพื่อค้นหาร้านค้า..." autocomplete="off" required>
+              <label for="shopSelect">🏪 ร้านค้า</label>
+              <select id="shopSelect" name="shopSelect" required>
+                <option value="" selected disabled>— เลือกร้านค้า —</option>
+              </select>
+              <input type="text" id="shopNameCustom" list="shopsDatalist"
+                     placeholder="พิมพ์ชื่อร้านค้า..." autocomplete="off"
+                     style="display:none; margin-top:8px;">
               <datalist id="shopsDatalist"></datalist>
-              <p class="field-hint">พิมพ์บางส่วนของชื่อร้านเพื่อค้นหา แล้วเลือกจากรายการ</p>
+              <p class="field-hint">เลือกจากรายการ หรือเลือก "✏️ พิมพ์ชื่อร้านเอง" เพื่อพิมพ์ชื่อร้านใหม่</p>
             </div>
 
             <div class="field">
