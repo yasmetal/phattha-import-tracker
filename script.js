@@ -4,6 +4,7 @@
 const FETCH_TIMEOUT_MS = 15000;
 const DEDUCTION_RATE = 0.03; // หัก 3%
 const ALL_SHOPS = "__ALL__";
+const UNKNOWN_SHOP = "(ไม่ระบุร้าน)"; // ป้ายกำกับข้อมูลเก่าที่ไม่มีชื่อร้าน (ไม่ใช่ร้านค้าจริง)
 
 const form = document.getElementById("importForm");
 const submitBtn = document.getElementById("submitBtn");
@@ -104,7 +105,7 @@ function rowQuantity(row) {
   return isNaN(q) ? 0 : q;
 }
 function rowEmployee(row) { return rowField(row, "employeeName", "ชื่อพนักงานนำเข้า"); }
-function rowShop(row) { return rowField(row, "shopName", "ร้านค้า") || "(ไม่ระบุร้าน)"; }
+function rowShop(row) { return rowField(row, "shopName", "ร้านค้า") || UNKNOWN_SHOP; }
 
 function monthKeyOf(row) {
   const d = new Date(rowTimestamp(row));
@@ -273,7 +274,7 @@ function populateMonthSelects(rows) {
 }
 
 function populateDashShopSelect(rows) {
-  const shopsInData = new Set(rows.map(rowShop).filter((s) => s && s !== "(ไม่ระบุร้าน)"));
+  const shopsInData = new Set(rows.map(rowShop).filter((s) => s && s !== UNKNOWN_SHOP));
   const listed = typeof SHOP_LIST !== "undefined" ? SHOP_LIST : [];
   listed.forEach((s) => shopsInData.add(s));
   const shops = Array.from(shopsInData).sort((a, b) => a.localeCompare(b, "th"));
@@ -302,7 +303,8 @@ function renderSummary() {
 
   summaryEmptyEl.style.display = "none";
   const total = monthRows.reduce((sum, r) => sum + rowQuantity(r), 0);
-  const shops = new Set(monthRows.map(rowShop));
+  // นับเฉพาะร้านที่มีชื่อจริง ไม่นับรายการเก่าที่ไม่ได้ระบุร้าน (UNKNOWN_SHOP) เป็น "ร้าน"
+  const shops = new Set(monthRows.map(rowShop).filter((s) => s !== UNKNOWN_SHOP));
 
   summaryTotalEl.textContent = formatNumber(Math.round(total));
   summaryNetEl.textContent = formatNumber(total * (1 - DEDUCTION_RATE), 2);
@@ -346,7 +348,9 @@ function renderDashboard() {
 }
 
 function renderRanking(monthKey) {
-  const monthRows = allRows.filter((r) => monthKeyOf(r) === monthKey);
+  // ไม่นับรายการที่ไม่ได้ระบุชื่อร้าน (ข้อมูลเก่าก่อนมีการเก็บชื่อร้าน) เข้าอันดับ
+  // เพราะไม่ใช่ร้านค้าจริง และจะบังตัวเลขของร้านค้าจริงจนดูภาพรวมไม่ได้
+  const monthRows = allRows.filter((r) => monthKeyOf(r) === monthKey && rowShop(r) !== UNKNOWN_SHOP);
   const byShop = new Map();
   monthRows.forEach((r) => {
     const s = rowShop(r);

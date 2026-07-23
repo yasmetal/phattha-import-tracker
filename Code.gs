@@ -42,8 +42,9 @@ function doPost(e) {
     const employeeName = body.employeeName;
     const shopName = body.shopName || "";
 
-    if (!importId || quantity === undefined || quantity === null || !employeeName) {
-      return jsonResponse_({ status: "error", message: "ข้อมูลไม่ครบ" });
+    // บังคับให้มีชื่อร้านค้าเสมอ (กันไม่ให้เกิดแถว "ไม่ระบุร้าน" เพิ่มขึ้นอีกในอนาคต)
+    if (!importId || quantity === undefined || quantity === null || !employeeName || !shopName) {
+      return jsonResponse_({ status: "error", message: "ข้อมูลไม่ครบ (ต้องมีร้านค้าด้วย)" });
     }
 
     const sheet = getSheet_();
