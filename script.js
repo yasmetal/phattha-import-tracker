@@ -475,16 +475,19 @@ form.addEventListener("submit", async (e) => {
 
   const importId = document.getElementById("importId").value.trim();
   const shopName = getSelectedShopName();
-  const quantity = document.getElementById("quantity").value;
+  const quantityRaw = document.getElementById("quantity").value.trim();
+  const quantity = Number(quantityRaw);
+  const quantityValid = quantityRaw !== "" && Number.isFinite(quantity) && quantity >= 0;
   const employeeName = document.getElementById("employeeName").value.trim();
 
-  if (!importId || !shopName || !quantity || !employeeName) {
-    setStatus(
-      shopSelect.value === CUSTOM_SHOP && !shopName
-        ? "กรุณาพิมพ์ชื่อร้านค้าในช่องที่แสดงขึ้นมา"
-        : "กรุณากรอกข้อมูลให้ครบทุกช่อง",
-      "error"
-    );
+  if (!importId || !shopName || !quantityValid || !employeeName) {
+    let message = "กรุณากรอกข้อมูลให้ครบทุกช่อง";
+    if (shopSelect.value === CUSTOM_SHOP && !shopName) {
+      message = "กรุณาพิมพ์ชื่อร้านค้าในช่องที่แสดงขึ้นมา";
+    } else if (quantityRaw !== "" && !quantityValid) {
+      message = "กรุณากรอกจำนวนเป็นตัวเลขที่ถูกต้อง (ต้องไม่ติดลบ)";
+    }
+    setStatus(message, "error");
     return;
   }
 
@@ -500,7 +503,7 @@ form.addEventListener("submit", async (e) => {
   }
   setStep("config", "done");
 
-  const payload = { importId, shopName, quantity: Number(quantity), employeeName };
+  const payload = { importId, shopName, quantity, employeeName };
 
   // ขั้นที่ 2: ส่งข้อมูลไปเซิร์ฟเวอร์
   setStep("send", "active");

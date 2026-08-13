@@ -38,13 +38,18 @@ function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     const importId = body.importId;
-    const quantity = body.quantity;
+    const quantity = Number(body.quantity);
     const employeeName = body.employeeName;
     const shopName = body.shopName || "";
 
     // บังคับให้มีชื่อร้านค้าเสมอ (กันไม่ให้เกิดแถว "ไม่ระบุร้าน" เพิ่มขึ้นอีกในอนาคต)
-    if (!importId || quantity === undefined || quantity === null || !employeeName || !shopName) {
+    if (!importId || !employeeName || !shopName) {
       return jsonResponse_({ status: "error", message: "ข้อมูลไม่ครบ (ต้องมีร้านค้าด้วย)" });
+    }
+    // ป้องกันข้อมูลจำนวนที่ผิดปกติ (ติดลบ / ไม่ใช่ตัวเลข) ไม่ให้เข้ามาปนในชีต
+    // แม้หน้าเว็บจะตรวจสอบแล้ว แต่ endpoint นี้เปิดสาธารณะ จึงต้องตรวจซ้ำฝั่งเซิร์ฟเวอร์ด้วย
+    if (body.quantity === undefined || body.quantity === null || !isFinite(quantity) || quantity < 0) {
+      return jsonResponse_({ status: "error", message: "จำนวนไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)" });
     }
 
     const sheet = getSheet_();
