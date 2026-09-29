@@ -297,6 +297,7 @@ function renderSummary() {
     summaryNetEl.textContent = "0";
     summaryCountEl.textContent = "0";
     summaryShopsEl.textContent = "0";
+    summaryEmptyEl.textContent = "ยังไม่มีข้อมูลในเดือนนี้";
     summaryEmptyEl.style.display = "block";
     return;
   }
@@ -361,6 +362,7 @@ function renderRanking(monthKey) {
 
   if (ranked.length === 0) {
     shopRankingEl.innerHTML = "";
+    rankEmptyEl.textContent = "ยังไม่มีข้อมูลในเดือนนี้";
     rankEmptyEl.style.display = "block";
     return;
   }
@@ -458,6 +460,10 @@ async function loadData() {
   } catch (err) {
     tableBody.innerHTML =
       '<tr><td colspan="5" class="empty-row">โหลดข้อมูลไม่สำเร็จ ลองรีเฟรชอีกครั้ง</td></tr>';
+    summaryEmptyEl.textContent = "โหลดข้อมูลไม่สำเร็จ ลองกดปุ่ม “รีเฟรช” ด้านบนอีกครั้ง";
+    summaryEmptyEl.style.display = "block";
+    rankEmptyEl.textContent = "โหลดข้อมูลไม่สำเร็จ ลองกดปุ่ม “รีเฟรช” ด้านบนอีกครั้ง";
+    rankEmptyEl.style.display = "block";
     console.error(err);
   }
 }
@@ -568,6 +574,17 @@ form.addEventListener("submit", async (e) => {
 refreshBtn.addEventListener("click", loadData);
 
 /* ---------------- Init ---------------- */
+
+// แสดงสถานะ "กำลังโหลด" ทันทีตั้งแต่เปิดหน้า เพราะ Google Apps Script บางครั้งใช้เวลาหลายวินาที
+// กว่าจะตอบกลับครั้งแรก (cold start) - ถ้าไม่มีตัวบ่งชี้นี้ ผู้ใช้จะเห็นเลข 0 / "ยังไม่มีข้อมูล"
+// ค้างอยู่ระหว่างรอ แล้วเข้าใจผิดว่าข้อมูลหาย
+[summaryTotalEl, summaryNetEl, summaryCountEl, summaryShopsEl, dashTotalEl, dashNetEl, dashCountEl, dashAllTimeEl].forEach(
+  (el) => (el.textContent = "…")
+);
+summaryEmptyEl.textContent = "กำลังโหลดข้อมูล...";
+summaryEmptyEl.style.display = "block";
+rankEmptyEl.textContent = "กำลังโหลดข้อมูล...";
+rankEmptyEl.style.display = "block";
 
 populateShopSelect();
 loadData();
